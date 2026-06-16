@@ -1103,9 +1103,14 @@ function GoalView() {
     div({className:"card",style:{padding:"16px"}}, [
       div({className:"diagnosis-title"}, [txt("家計診断")]),
       div({className:"diagnosis-text"}, [txt("目標達成に向けて、今月の家計をやさしく点検します。")]),
-      div({className:"advice-list",style:{marginTop:"14px"}}, diagnosis.points.map(function(point){
-        return div({className:"advice-item"}, [txt(point)]);
-      }))
+      div({className:"advice-list",style:{marginTop:"14px"}}, [
+        div({className:"advice-item"}, [txt("良い点: " + diagnosis.goodPoint)]),
+        div({className:"advice-item"}, [txt("注意点: " + diagnosis.warnings[0])]),
+        diagnosis.warnings[1] ? div({className:"advice-item"}, [txt("注意点: " + diagnosis.warnings[1])]) : null,
+        div({className:"advice-item"}, [txt("最大支出カテゴリ: " + diagnosis.topExpenseLabel)]),
+        div({className:"advice-item"}, [txt("ひとこと提案: " + diagnosis.action)]),
+        div({className:"advice-item"}, [txt("目標の進み具合: " + diagnosis.goalStatus)])
+      ].filter(Boolean))
     ])
   ]);
 }
