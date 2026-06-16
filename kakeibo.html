@@ -541,9 +541,13 @@ function FormModal(initial) {
     var isIncome = fd.type==="income";
     var cats = CATEGORIES[fd.type];
 
-    var typeToggle = div({className:"type-toggle"}, ["expense","income"].map(function(t){
+    var typeToggle = div({className:"type-toggle",style:{display:"grid",gridTemplateColumns:"1fr 1fr",alignItems:"stretch",width:"100%"}}, ["expense","income"].map(function(t){
       var active = fd.type===t;
       var b = btn({className:"type-btn",style:{
+        display:"block",
+        width:"100%",
+        maxWidth:"100%",
+        minWidth:"0",
         background:active?(t==="income"?"#10b981":"#f43f5e"):"transparent",
         color:active?"#fff":"#64748b"
       }}, [txt(t==="income"?"収入":"支出")]);
