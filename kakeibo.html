@@ -451,6 +451,74 @@ function balanceMsg(income, expense, balance) {
   return ["支出が多めです🔥 残りの使い方に注意！","#6b7280"];
 }
 
+function getFreeDiagnosis() {
+  var s = summary();
+  var budget = totalBudget();
+  var ratio = s.income > 0 ? s.expense / s.income : 1;
+  var score = 50;
+  if (s.balance > 0) score += 20;
+  if (ratio <= 0.8) score += 15;
+  else if (ratio > 1) score -= 15;
+  if (budget > 0 && s.expense <= budget) score += 10;
+  else if (budget > 0 && s.expense > budget) score -= 10;
+  if (averageRecentBalance(3) > 0) score += 10;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+
+  var tone = "おおむね安定しています。";
+  if (score < 40) tone = "今月は見直し優先です。";
+  else if (score < 70) tone = "少し整えるとかなり楽になります。";
+
+  var expenses = catBreakdown("expense");
+  var topExpense = expenses.length > 0 ? expenses[0] : null;
+  var avgBalance = averageRecentBalance(3);
+  var goalProjection = getGoalProjection(state.goal);
+
+  var goodPoint = "";
+  if (s.balance > 0) goodPoint = "今月は黒字です。余った分を目標貯金へ回しやすい流れです。";
+  else if (budget > 0 && s.expense <= budget) goodPoint = "予算内で動けています。家計のコントロールができています。";
+  else if (ratio <= 0.8) goodPoint = "収入に対して支出が抑えられていて、全体のバランスは悪くありません。";
+  else goodPoint = "記録が積み上がってきているので、見直しポイントが見つけやすい状態です。";
+
+  var warnings = [];
+  if (s.balance < 0) warnings.push("今月の収支は赤字です。まずは固定費か食費を小さく見直すのが近道です。");
+  if (budget > 0 && s.expense > budget) warnings.push("設定した予算を超えています。使い過ぎカテゴリを1つだけ決めて来月は先に上限を置くのがおすすめです。");
+  if (topExpense) warnings.push("今月いちばん大きい支出は「" + topExpense.cat + "」です。ここを見直すと効果が出やすいです。");
+  if (warnings.length < 2) {
+    if (budget === 0) warnings.push("予算が未設定です。まずは食費・日用品・娯楽の3つだけでも上限を決めると管理しやすくなります。");
+    if (!topExpense) warnings.push("支出データが増えるほど診断が正確になります。数日分だけでも続けると傾向が見えます。");
+    if (warnings.length < 2 && ratio > 0.8) warnings.push("支出率が高めです。今月は小さな節約を1つだけ決めると整えやすいです。");
+  }
+  warnings = warnings.slice(0, 2);
+
+  var action = "";
+  if (goalProjection && goalProjection.requiredMonthly > Math.max(avgBalance, 0)) {
+    action = "目標達成には毎月 " + formatYen(goalProjection.requiredMonthly) + " が目安です。今の平均黒字との差を少しずつ埋めるのがおすすめです。";
+  } else if (topExpense) {
+    action = "次の1週間は「" + topExpense.cat + "」だけ意識して、買う前に一度立ち止まると改善しやすいです。";
+  } else {
+    action = "まずは数日分の記録を増やして、来月の診断材料を集めましょう。";
+  }
+
+  var goalStatus = "目標はまだ未設定です。";
+  if (state.goal && goalProjection) {
+    if (goalProjection.completionRate >= 100) goalStatus = "目標に対して順調です。";
+    else if (goalProjection.requiredMonthly <= Math.max(avgBalance, 0)) goalStatus = "目標に対しておおむね順調です。";
+    else goalStatus = "目標に対して少し遅れ気味です。";
+  }
+
+  return {
+    score: score,
+    tone: tone,
+    ratio: ratio,
+    avgBalance: avgBalance,
+    goodPoint: goodPoint,
+    warnings: warnings,
+    topExpenseLabel: topExpense ? topExpense.cat : "まだ判定できません",
+    action: action,
+    goalStatus: goalStatus
+  };
+}
+
 function addTx(data) {
   var tx = Object.assign({id:nanoid(),createdAt:Date.now()}, data, {amount:Number(data.amount), isCard:!!data.isCard});
   var txs = [tx].concat(state.transactions);
@@ -893,7 +961,7 @@ function BudgetView() {
 function GoalView() {
   var goal = state.goal;
   var projection = getGoalProjection(goal);
-  var diagnosis = getDiagnosis();
+  var diagnosis = getFreeDiagnosis();
 
   if (state.showGoalEdit) {
     var draft = goal || {title:"",targetAmount:0,currentAmount:0,targetDate:"",monthlySaving:0,note:""};
@@ -972,9 +1040,12 @@ function GoalView() {
       div({className:"card",style:{padding:"16px"}}, [
         div({className:"diagnosis-title"}, [txt("家計のワンポイント診断")]),
         div({className:"diagnosis-text"}, [txt(diagnosis.tone)]),
-        div({className:"advice-list",style:{marginTop:"14px"}}, diagnosis.points.map(function(point){
-          return div({className:"advice-item"}, [txt(point)]);
-        }))
+        div({className:"advice-list",style:{marginTop:"14px"}}, [
+          div({className:"advice-item"}, [txt("良い点: " + diagnosis.goodPoint)]),
+          div({className:"advice-item"}, [txt("注意点: " + diagnosis.warnings[0])]),
+          diagnosis.warnings[1] ? div({className:"advice-item"}, [txt("注意点: " + diagnosis.warnings[1])]) : null,
+          div({className:"advice-item"}, [txt("目標の進み具合: " + diagnosis.goalStatus)])
+        ].filter(Boolean))
       ])
     ]);
   }
@@ -1040,7 +1111,7 @@ function GoalView() {
 }
 
 function DiagnosisView() {
-  var d = getDiagnosis();
+  var d = getFreeDiagnosis();
   var scoreColor = d.score >= 70 ? "#10b981" : d.score >= 40 ? "#f59e0b" : "#f43f5e";
   var scoreDeg = Math.round((d.score / 100) * 360);
   return div({style:{display:"flex",flexDirection:"column",gap:"12px"}}, [
@@ -1062,9 +1133,14 @@ function DiagnosisView() {
     ]),
     div({className:"card",style:{padding:"16px"}}, [
       div({className:"diagnosis-title"}, [txt("改善アドバイス")]),
-      div({className:"advice-list",style:{marginTop:"14px"}}, d.points.map(function(point){
-        return div({className:"advice-item"}, [txt(point)]);
-      }))
+      div({className:"advice-list",style:{marginTop:"14px"}}, [
+        div({className:"advice-item"}, [txt("良い点: " + d.goodPoint)]),
+        div({className:"advice-item"}, [txt("注意点: " + d.warnings[0])]),
+        d.warnings[1] ? div({className:"advice-item"}, [txt("注意点: " + d.warnings[1])]) : null,
+        div({className:"advice-item"}, [txt("最大支出カテゴリ: " + d.topExpenseLabel)]),
+        div({className:"advice-item"}, [txt("ひとこと提案: " + d.action)]),
+        div({className:"advice-item"}, [txt("目標の進み具合: " + d.goalStatus)])
+      ].filter(Boolean))
     ])
   ]);
 }
