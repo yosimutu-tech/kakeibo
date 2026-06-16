@@ -38,8 +38,9 @@
     .banner-msg{font-size:13px;color:#6b7280;margin-top:5px}
     .progress-bar-bg{background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;margin-top:8px}
     .progress-bar{height:100%;border-radius:6px;transition:width .6s ease}
-    .tabs{display:flex;background:#fff;border-radius:14px;padding:4px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);gap:2px}
-    .tab-btn{flex:1;padding:9px 0;border-radius:10px;border:none;cursor:pointer;font-weight:500;font-size:11px;color:#94a3b8;background:transparent;transition:all .2s}
+    .tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:14px;padding:4px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);gap:6px;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab-btn{flex:0 0 auto;min-width:82px;padding:10px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:12px;color:#94a3b8;background:transparent;transition:all .2s;white-space:nowrap}
     .tab-btn.active{background:#f1f5f9;font-weight:700;color:#1e293b}
     .date-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:0 4px}
     .date-label{font-size:13px;color:#64748b;font-weight:600}
@@ -68,8 +69,8 @@
     .form-input:focus{border-color:#10b981}
     .form-textarea{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid #e2e8f0;font-size:15px;background:#f8fafc;outline:none;resize:none;min-height:120px;line-height:1.7}
     .form-textarea:focus{border-color:#6366f1}
-    .type-toggle{display:flex;background:#f1f5f9;border-radius:12px;padding:4px;margin-bottom:16px}
-    .type-btn{flex:1;padding:10px 0;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:transparent;color:#64748b;transition:all .2s}
+    .type-toggle{display:flex;align-items:center;width:100%;background:#f1f5f9;border-radius:12px;padding:4px;margin-bottom:16px}
+    .type-btn{flex:1 1 0;min-width:0;padding:10px 0;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:transparent;color:#64748b;transition:all .2s;text-align:center}
     /* カード払いトグル */
     .card-toggle-wrap{margin-bottom:16px}
     .card-toggle-btn{width:100%;padding:11px 0;border-radius:12px;border:1.5px solid #e0e7ff;background:#f5f3ff;color:#6366f1;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s}
@@ -104,6 +105,24 @@
     .memo-card-body{font-size:14px;color:#64748b;line-height:1.7;white-space:pre-wrap;word-break:break-all;margin-top:8px}
     .memo-card-date{font-size:12px;color:#94a3b8;margin-top:10px}
     .memo-card-actions{display:flex;gap:4px;position:absolute;top:12px;right:10px}
+    .goal-stack{display:flex;flex-direction:column;gap:12px}
+    .goal-hero{padding:18px}
+    .goal-title{font-size:17px;font-weight:800;color:#1e293b}
+    .goal-sub{font-size:13px;color:#64748b;margin-top:6px;line-height:1.6}
+    .goal-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    .goal-metric{background:#f8fafc;border-radius:14px;padding:12px}
+    .goal-metric-label{font-size:12px;color:#94a3b8;font-weight:600}
+    .goal-metric-value{font-size:16px;font-weight:800;color:#1e293b;margin-top:6px}
+    .goal-note{margin-top:12px;padding:12px;border-radius:14px;background:#f8fafc;font-size:13px;color:#475569;line-height:1.7;white-space:pre-wrap}
+    .advice-list{display:flex;flex-direction:column;gap:10px}
+    .advice-item{padding:12px 14px;border-radius:14px;background:#f8fafc;font-size:13px;color:#475569;line-height:1.7}
+    .score-ring{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#1e293b;background:conic-gradient(#10b981 0deg,#10b981 240deg,#e2e8f0 240deg)}
+    .diagnosis-header{display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .diagnosis-copy{flex:1}
+    .diagnosis-title{font-size:16px;font-weight:800;color:#1e293b}
+    .diagnosis-text{font-size:13px;color:#64748b;line-height:1.7;margin-top:6px}
+    .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .info-chip{padding:7px 11px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:600}
   </style>
 </head>
 <body>
@@ -146,6 +165,7 @@ function addMonths(ym, d) { var p = ym.split("-").map(Number); var dt = new Date
 var TX_KEY = "kakeibo_tx_v3";
 var BDG_KEY = "kakeibo_budget_v3";
 var MEMO_KEY = "kakeibo_memo_v1";
+var GOAL_KEY = "kakeibo_goal_v1";
 
 function loadTx() {
   try {
@@ -188,6 +208,23 @@ function loadMemos() {
   } catch(e) { return []; }
 }
 function saveMemos(a) { try { localStorage.setItem(MEMO_KEY, JSON.stringify(a)); } catch(e){} }
+function loadGoal() {
+  try {
+    var raw = localStorage.getItem(GOAL_KEY);
+    if (!raw) return null;
+    var g = JSON.parse(raw);
+    if (!g || typeof g !== "object") return null;
+    return {
+      title: typeof g.title === "string" ? g.title : "",
+      targetAmount: Number(g.targetAmount) || 0,
+      currentAmount: Number(g.currentAmount) || 0,
+      targetDate: typeof g.targetDate === "string" ? g.targetDate : "",
+      monthlySaving: Number(g.monthlySaving) || 0,
+      note: typeof g.note === "string" ? g.note : ""
+    };
+  } catch(e) { return null; }
+}
+function saveGoal(goal) { try { localStorage.setItem(GOAL_KEY, JSON.stringify(goal)); } catch(e){} }
 
 var state = {
   transactions: loadTx(),
@@ -197,6 +234,7 @@ var state = {
   catType: "expense",
   graphYear: currentYear(),
   budget: loadBdg(),
+  goal: loadGoal(),
   showAdd: false,
   editTx: null,
   confirmId: null,
@@ -204,6 +242,7 @@ var state = {
   showMemoAdd: false,
   editMemo: null,
   confirmMemoId: null,
+  showGoalEdit: false,
   budgetDraft: {}
 };
 
@@ -310,6 +349,93 @@ function groupedByDate() {
 }
 
 function totalBudget() { return Object.values(state.budget).reduce(function(s,v){return s+v;},0); }
+function monthDiffFromNow(targetDate) {
+  if (!targetDate) return 0;
+  var now = new Date();
+  var target = new Date(targetDate+"T00:00:00");
+  var months = (target.getFullYear()-now.getFullYear())*12 + (target.getMonth()-now.getMonth());
+  if (target.getDate() >= now.getDate()) months += 1;
+  return Math.max(months, 0);
+}
+
+function averageRecentBalance(monthCount) {
+  var total = 0;
+  var count = 0;
+  for (var i = 0; i < monthCount; i += 1) {
+    var ym = addMonths(currentYM(), -i);
+    var txs = state.transactions.filter(function(t){ return t.date.startsWith(ym); });
+    if (txs.length===0) continue;
+    var income = txs.filter(function(t){return t.type==="income";}).reduce(function(s,t){return s+t.amount;},0);
+    var expense = txs.filter(function(t){return t.type==="expense"&&!t.isCard;}).reduce(function(s,t){return s+t.amount;},0);
+    var prevCard = getPrevCardTotal(ym);
+    total += income - expense - prevCard;
+    count += 1;
+  }
+  return count ? total / count : 0;
+}
+
+function getGoalProjection(goal) {
+  if (!goal) return null;
+  var monthsLeft = monthDiffFromNow(goal.targetDate);
+  var remaining = Math.max(goal.targetAmount - goal.currentAmount, 0);
+  var requiredMonthly = monthsLeft > 0 ? Math.ceil(remaining / monthsLeft) : remaining;
+  var avgBalance = averageRecentBalance(3);
+  var plannedMonthly = goal.monthlySaving > 0 ? goal.monthlySaving : avgBalance;
+  var projectedTotal = goal.currentAmount + Math.max(plannedMonthly, 0) * monthsLeft;
+  var progress = goal.targetAmount > 0 ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100) : 0;
+  var completionRate = goal.targetAmount > 0 ? Math.min((projectedTotal / goal.targetAmount) * 100, 999) : 0;
+  return {
+    monthsLeft: monthsLeft,
+    remaining: remaining,
+    requiredMonthly: requiredMonthly,
+    avgBalance: avgBalance,
+    plannedMonthly: plannedMonthly,
+    projectedTotal: projectedTotal,
+    progress: progress,
+    completionRate: completionRate
+  };
+}
+
+function getDiagnosis() {
+  var s = summary();
+  var budget = totalBudget();
+  var ratio = s.income > 0 ? s.expense / s.income : 1;
+  var score = 50;
+  if (s.balance > 0) score += 20;
+  if (ratio <= 0.8) score += 15;
+  else if (ratio > 1) score -= 15;
+  if (budget > 0 && s.expense <= budget) score += 10;
+  else if (budget > 0 && s.expense > budget) score -= 10;
+  if (averageRecentBalance(3) > 0) score += 10;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+
+  var tone = "おおむね安定しています。";
+  if (score < 40) tone = "今月は見直し優先です。";
+  else if (score < 70) tone = "少し整えるとかなり楽になります。";
+
+  var points = [];
+  if (s.balance < 0) points.push("今月の収支が赤字です。まずは固定費か食費を小さく見直すのが近道です。");
+  else points.push("今月は黒字です。この余りを目標貯金に回す流れが作れています。");
+
+  if (budget > 0) {
+    if (s.expense > budget) points.push("設定予算を超えています。使い過ぎカテゴリを1つだけ決めて来月は先に上限を置くのがおすすめです。");
+    else points.push("予算内で動けています。今の配分をベースに目標別の積立額を決めやすい状態です。");
+  } else {
+    points.push("予算が未設定です。まずは食費・日用品・娯楽の3つだけでも上限を決めると管理しやすくなります。");
+  }
+
+  var expenses = catBreakdown("expense");
+  if (expenses.length > 0) points.push("一番大きい支出は「" + expenses[0].cat + "」です。ここを基準に見直すと効果が出やすいです。");
+  else points.push("支出データが増えるほど診断が正確になります。数日分だけでも続けると傾向が見えてきます。");
+
+  return {
+    score: score,
+    tone: tone,
+    points: points,
+    ratio: ratio,
+    avgBalance: averageRecentBalance(3)
+  };
+}
 
 function balanceMsg(income, expense, balance) {
   var tb = totalBudget();
@@ -363,6 +489,10 @@ function deleteMemo(id) {
   var memos = state.memos.filter(function(m){return m.id!==id;});
   saveMemos(memos);
   setState({memos:memos, confirmMemoId:null});
+}
+function saveGoalAction(goal) {
+  saveGoal(goal);
+  setState({goal:goal, showGoalEdit:false});
 }
 
 function el(tag, attrs, children) {
@@ -754,6 +884,185 @@ function BudgetView() {
   return div({style:{display:"flex",flexDirection:"column",gap:"12px"}}, nodes);
 }
 
+function GoalView() {
+  var goal = state.goal;
+  var projection = getGoalProjection(goal);
+  var diagnosis = getDiagnosis();
+
+  if (state.showGoalEdit) {
+    var draft = goal || {title:"",targetAmount:0,currentAmount:0,targetDate:"",monthlySaving:0,note:""};
+    var fd = {
+      title: draft.title,
+      targetAmount: draft.targetAmount ? String(draft.targetAmount) : "",
+      currentAmount: draft.currentAmount ? String(draft.currentAmount) : "",
+      targetDate: draft.targetDate || "",
+      monthlySaving: draft.monthlySaving ? String(draft.monthlySaving) : "",
+      note: draft.note || ""
+    };
+    var titleInp = inp({type:"text",className:"form-input",placeholder:"例: 3年後に家の頭金をためる",value:fd.title});
+    titleInp.addEventListener("input", function(e){ fd.title = e.target.value; });
+    var targetInp = inp({type:"number",className:"form-input",inputmode:"numeric",placeholder:"目標金額",value:fd.targetAmount});
+    targetInp.addEventListener("input", function(e){ fd.targetAmount = e.target.value; });
+    var currentInp = inp({type:"number",className:"form-input",inputmode:"numeric",placeholder:"今ある貯金",value:fd.currentAmount});
+    currentInp.addEventListener("input", function(e){ fd.currentAmount = e.target.value; });
+    var dateInp = inp({type:"date",className:"form-input",value:fd.targetDate});
+    dateInp.addEventListener("change", function(e){ fd.targetDate = e.target.value; });
+    var monthlyInp = inp({type:"number",className:"form-input",inputmode:"numeric",placeholder:"毎月ためたい金額",value:fd.monthlySaving});
+    monthlyInp.addEventListener("input", function(e){ fd.monthlySaving = e.target.value; });
+    var noteTA = el("textarea",{className:"form-textarea",placeholder:"目的や家族で話していることをメモできます"},[]);
+    noteTA.value = fd.note;
+    noteTA.addEventListener("input", function(e){ fd.note = e.target.value; });
+
+    var saveB = btn({className:"submit-btn",style:{background:"#0f766e"}}, [txt("目標を保存する")]);
+    saveB.addEventListener("click", function(){
+      var nextGoal = {
+        title: fd.title.trim(),
+        targetAmount: Number(fd.targetAmount) || 0,
+        currentAmount: Number(fd.currentAmount) || 0,
+        targetDate: fd.targetDate,
+        monthlySaving: Number(fd.monthlySaving) || 0,
+        note: fd.note.trim()
+      };
+      if (!nextGoal.title || !nextGoal.targetAmount || !nextGoal.targetDate) {
+        showToast("目標名・目標金額・期限を入力してください");
+        return;
+      }
+      saveGoalAction(nextGoal);
+    });
+    var cancelB = btn({style:{background:"#f1f5f9",border:"none",borderRadius:"12px",padding:"12px 0",fontSize:"14px",fontWeight:"700",cursor:"pointer",color:"#64748b"}}, [txt("閉じる")]);
+    cancelB.addEventListener("click", function(){ setState({showGoalEdit:false}); });
+
+    return div({className:"goal-stack"}, [
+      div({className:"card",style:{padding:"16px"}}, [
+        div({style:{fontWeight:"800",fontSize:"16px",marginBottom:"14px",color:"#1e293b"}}, [txt("目標貯金を設定")]),
+        div({style:{display:"flex",flexDirection:"column",gap:"16px"}}, [
+          div({}, [el("label",{className:"form-label"},[txt("目標名")]), titleInp]),
+          div({}, [el("label",{className:"form-label"},[txt("目標金額")]), targetInp]),
+          div({}, [el("label",{className:"form-label"},[txt("今ある貯金")]), currentInp]),
+          div({}, [el("label",{className:"form-label"},[txt("達成したい日")]), dateInp]),
+          div({}, [el("label",{className:"form-label"},[txt("毎月ためたい金額")]), monthlyInp]),
+          div({}, [el("label",{className:"form-label"},[txt("メモ")]), noteTA]),
+          saveB,
+          cancelB
+        ])
+      ])
+    ]);
+  }
+
+  var createB = btn({style:{background:"#0f766e",border:"none",borderRadius:"10px",padding:"8px 14px",fontSize:"13px",fontWeight:"700",cursor:"pointer",color:"#fff"}}, [txt(goal ? "編集" : "設定")]);
+  createB.addEventListener("click", function(){ setState({showGoalEdit:true}); });
+
+  if (!goal || !projection) {
+    return div({className:"goal-stack"}, [
+      div({className:"card goal-hero"}, [
+        div({style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"10px"}}, [
+          div({}, [
+            div({className:"goal-title"}, [txt("目標貯金を作る")]),
+            div({className:"goal-sub"}, [txt("家、旅行、引っ越しなど、ためる理由を先に決めると家計簿が続きやすくなります。")])
+          ]),
+          createB
+        ])
+      ]),
+      div({className:"card",style:{padding:"16px"}}, [
+        div({className:"diagnosis-title"}, [txt("家計のワンポイント診断")]),
+        div({className:"diagnosis-text"}, [txt(diagnosis.tone)]),
+        div({className:"advice-list",style:{marginTop:"14px"}}, diagnosis.points.map(function(point){
+          return div({className:"advice-item"}, [txt(point)]);
+        }))
+      ])
+    ]);
+  }
+
+  var progressColor = projection.completionRate >= 100 ? "#10b981" : projection.requiredMonthly <= Math.max(projection.avgBalance, 0) ? "#0f766e" : "#f59e0b";
+  var tips = [];
+  if (projection.requiredMonthly > Math.max(projection.avgBalance, 0)) {
+    tips.push("今の平均黒字だけでは少し足りません。毎月 " + formatYen(projection.requiredMonthly - Math.max(projection.avgBalance, 0)) + " ほど追加で確保できると近づきます。");
+  } else {
+    tips.push("今のペースでも目標に近づけそうです。黒字分を先に分けておくと達成しやすくなります。");
+  }
+  if (diagnosis.avgBalance <= 0) {
+    tips.push("まずは家計診断の改善ポイントを1つだけ実行して、黒字を作ることを優先するのがおすすめです。");
+  }
+  if (goal.note) tips.push(goal.note);
+
+  return div({className:"goal-stack"}, [
+    div({className:"card goal-hero"}, [
+      div({style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"10px"}}, [
+        div({}, [
+          div({className:"goal-title"}, [txt(goal.title)]),
+          div({className:"goal-sub"}, [txt("期限: " + goal.targetDate + " / 残り " + projection.monthsLeft + " か月")])
+        ]),
+        createB
+      ]),
+      div({style:{marginTop:"14px"}}, [
+        div({style:{display:"flex",justifyContent:"space-between",fontSize:"12px",color:"#94a3b8"}}, [
+          txt("進み具合"),
+          txt(Math.round(projection.progress) + "%")
+        ]),
+        div({className:"progress-bar-bg"}, [
+          div({className:"progress-bar",style:{width:Math.max(4, projection.progress) + "%",background:progressColor}})
+        ])
+      ]),
+      div({className:"goal-metrics"}, [
+        div({className:"goal-metric"}, [
+          div({className:"goal-metric-label"}, [txt("毎月必要")]),
+          div({className:"goal-metric-value"}, [txt(formatYen(projection.requiredMonthly))])
+        ]),
+        div({className:"goal-metric"}, [
+          div({className:"goal-metric-label"}, [txt("今の平均黒字")]),
+          div({className:"goal-metric-value",style:{color:projection.avgBalance >= 0 ? "#10b981" : "#f43f5e"}}, [txt(formatYen(Math.round(projection.avgBalance)))])
+        ]),
+        div({className:"goal-metric"}, [
+          div({className:"goal-metric-label"}, [txt("残り必要額")]),
+          div({className:"goal-metric-value"}, [txt(formatYen(projection.remaining))])
+        ]),
+        div({className:"goal-metric"}, [
+          div({className:"goal-metric-label"}, [txt("見込み到達額")]),
+          div({className:"goal-metric-value"}, [txt(formatYen(Math.round(projection.projectedTotal)))])
+        ])
+      ]),
+      div({className:"goal-note"}, [txt(tips.join("\n"))])
+    ]),
+    div({className:"card",style:{padding:"16px"}}, [
+      div({className:"diagnosis-title"}, [txt("家計診断")]),
+      div({className:"diagnosis-text"}, [txt("目標達成に向けて、今月の家計をやさしく点検します。")]),
+      div({className:"advice-list",style:{marginTop:"14px"}}, diagnosis.points.map(function(point){
+        return div({className:"advice-item"}, [txt(point)]);
+      }))
+    ])
+  ]);
+}
+
+function DiagnosisView() {
+  var d = getDiagnosis();
+  var scoreColor = d.score >= 70 ? "#10b981" : d.score >= 40 ? "#f59e0b" : "#f43f5e";
+  var scoreDeg = Math.round((d.score / 100) * 360);
+  return div({style:{display:"flex",flexDirection:"column",gap:"12px"}}, [
+    div({className:"card",style:{padding:"16px"}}, [
+      div({className:"diagnosis-header"}, [
+        div({className:"diagnosis-copy"}, [
+          div({className:"diagnosis-title"}, [txt("今月の家計スコア")]),
+          div({className:"diagnosis-text"}, [txt(d.tone)])
+        ]),
+        div({className:"score-ring",style:{background:"conic-gradient(" + scoreColor + " 0deg," + scoreColor + " " + scoreDeg + "deg,#e2e8f0 " + scoreDeg + "deg)"}}, [
+          txt(String(d.score))
+        ])
+      ]),
+      div({className:"chip-row"}, [
+        span({className:"info-chip"}, [txt("支出率 " + Math.round(d.ratio * 100) + "%")]),
+        span({className:"info-chip"}, [txt("直近平均 " + formatYen(Math.round(d.avgBalance)))]),
+        span({className:"info-chip"}, [txt(totalBudget() > 0 ? "予算あり" : "予算未設定")])
+      ])
+    ]),
+    div({className:"card",style:{padding:"16px"}}, [
+      div({className:"diagnosis-title"}, [txt("改善アドバイス")]),
+      div({className:"advice-list",style:{marginTop:"14px"}}, d.points.map(function(point){
+        return div({className:"advice-item"}, [txt(point)]);
+      }))
+    ])
+  ]);
+}
+
 function MemoView() {
   var memos = state.memos.slice().sort(function(a,b){return b.createdAt-a.createdAt;});
   if (memos.length===0) return div({className:"empty"}, [
@@ -878,7 +1187,15 @@ function render() {
     content.appendChild(banner);
   }
 
-  var TABS = [["list","≡ 明細"],["category","📊 カテゴリ"],["budget","💰 予算"],["graph","📅 年間"],["memo","📝 メモ"]];
+  var TABS = [
+    ["list","明細"],
+    ["category","カテゴリ"],
+    ["budget","予算"],
+    ["goal","目標"],
+    ["diagnosis","診断"],
+    ["graph","年間"],
+    ["memo","覚え書き"]
+  ];
   var tabsEl = div({className:"tabs"}, TABS.map(function(t){
     var b = btn({className:"tab-btn"+(state.tab===t[0]?" active":"")}, [txt(t[1])]);
     b.addEventListener("click", function(){ setState({tab:t[0]}); });
@@ -964,6 +1281,8 @@ function render() {
   }
 
   if (state.tab==="budget") tabContent.appendChild(BudgetView());
+  if (state.tab==="goal") tabContent.appendChild(GoalView());
+  if (state.tab==="diagnosis") tabContent.appendChild(DiagnosisView());
   if (state.tab==="graph") tabContent.appendChild(YearlyGraph());
   if (state.tab==="memo") tabContent.appendChild(MemoView());
 
