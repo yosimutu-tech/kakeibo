@@ -71,8 +71,8 @@
     .form-input:focus{border-color:#10b981}
     .form-textarea{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid #e2e8f0;font-size:15px;background:#f8fafc;outline:none;resize:none;min-height:120px;line-height:1.7}
     .form-textarea:focus{border-color:#6366f1}
-    .type-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;background:#f1f5f9;border-radius:12px;padding:4px;gap:4px;margin-bottom:16px}
-    .type-btn{display:block;width:100%;min-width:0;padding:10px 0;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:transparent;color:#64748b;transition:all .2s;text-align:center}
+    .type-toggle{display:flex;align-items:center;width:100%;background:#f1f5f9;border-radius:12px;padding:4px;gap:4px;margin-bottom:16px;overflow:hidden}
+    .type-btn{-webkit-appearance:none;appearance:none;display:block;flex:1 0 calc(50% - 2px);max-width:calc(50% - 2px);width:calc(50% - 2px);min-width:0;margin:0;padding:10px 0;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:14px;line-height:1.2;background:transparent;color:#64748b;transition:all .2s;text-align:center}
     /* カード払いトグル */
     .card-toggle-wrap{margin-bottom:16px}
     .card-toggle-btn{width:100%;padding:11px 0;border-radius:12px;border:1.5px solid #e0e7ff;background:#f5f3ff;color:#6366f1;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s}
