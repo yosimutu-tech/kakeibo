@@ -16,11 +16,13 @@
     @keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     #app{max-width:480px;margin:0 auto;min-height:100vh;position:relative}
-    .header{background:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;position:sticky;top:0;z-index:10}
+    .header{background:#fff;padding:14px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;z-index:10}
+    .header-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
     .header-logo{width:36px;height:36px;border-radius:10px;background:#10b981;display:flex;align-items:center;justify-content:center;font-size:18px}
-    .header-title{font-weight:800;font-size:17px;margin-left:10px}
+    .header-title{font-weight:800;font-size:15px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .nav-btn{background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;padding:0 6px}
-    .nav-label{font-weight:700;font-size:15px;min-width:78px;text-align:center}
+    .header-nav{display:flex;align-items:center;gap:4px;flex-shrink:0}
+    .nav-label{font-weight:700;font-size:14px;min-width:72px;text-align:center}
     .content{padding:14px 14px 100px}
     .card{background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
     .summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
@@ -38,9 +40,9 @@
     .banner-msg{font-size:13px;color:#6b7280;margin-top:5px}
     .progress-bar-bg{background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;margin-top:8px}
     .progress-bar{height:100%;border-radius:6px;transition:width .6s ease}
-    .tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:14px;padding:4px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);gap:6px;scrollbar-width:none}
+    .tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:14px;padding:4px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);gap:4px;scrollbar-width:none}
     .tabs::-webkit-scrollbar{display:none}
-    .tab-btn{flex:0 0 auto;min-width:82px;padding:10px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:12px;color:#94a3b8;background:transparent;transition:all .2s;white-space:nowrap}
+    .tab-btn{flex:0 0 auto;min-width:72px;padding:10px 10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:12px;color:#94a3b8;background:transparent;transition:all .2s;white-space:nowrap}
     .tab-btn.active{background:#f1f5f9;font-weight:700;color:#1e293b}
     .date-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding:0 4px}
     .date-label{font-size:13px;color:#64748b;font-weight:600}
@@ -69,8 +71,8 @@
     .form-input:focus{border-color:#10b981}
     .form-textarea{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid #e2e8f0;font-size:15px;background:#f8fafc;outline:none;resize:none;min-height:120px;line-height:1.7}
     .form-textarea:focus{border-color:#6366f1}
-    .type-toggle{display:flex;align-items:center;width:100%;background:#f1f5f9;border-radius:12px;padding:4px;margin-bottom:16px}
-    .type-btn{flex:1 1 0;min-width:0;padding:10px 0;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:transparent;color:#64748b;transition:all .2s;text-align:center}
+    .type-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;background:#f1f5f9;border-radius:12px;padding:4px;gap:4px;margin-bottom:16px}
+    .type-btn{display:block;width:100%;min-width:0;padding:10px 0;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:transparent;color:#64748b;transition:all .2s;text-align:center}
     /* カード払いトグル */
     .card-toggle-wrap{margin-bottom:16px}
     .card-toggle-btn{width:100%;padding:11px 0;border-radius:12px;border:1.5px solid #e0e7ff;background:#f5f3ff;color:#6366f1;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s}
@@ -1106,13 +1108,13 @@ function render() {
   var isMemoTab = state.tab==="memo";
 
   root.appendChild(div({className:"header"}, [
-    div({style:{display:"flex",alignItems:"center"}}, [
+    div({className:"header-main"}, [
       div({className:"header-logo"}, [txt("📒")]),
       span({className:"header-title"}, [txt("かんたん家計簿")])
     ]),
     isMemoTab
       ? span({style:{fontSize:"14px",color:"#6366f1",fontWeight:"700"}}, [txt("📝 覚え書き")])
-      : div({style:{display:"flex",alignItems:"center",gap:"8px"}}, [
+      : div({className:"header-nav"}, [
           prevBtn,
           span({className:"nav-label"}, [txt(ymLabel(state.yearMonth))]),
           nextBtn
